@@ -4,12 +4,17 @@ export interface NodeConfig {
 	id: string;
 	name: string;
 	role: NodeRole;
-	/** Tailscale MagicDNS hostname or IP — used by metrics adapter to reach the agent */
+	/** Tailscale IP or MagicDNS hostname — used by metrics adapter to reach the agent */
 	host: string;
-	/** Optional Tailscale IP for display */
-	tailscaleIp?: string;
+	/** The node's Tailscale machine name (for display) */
+	tailscaleName?: string;
 	/** If false, the node has no metrics agent — show as presence-only */
 	hasMetrics: boolean;
+}
+
+export interface AppConfig {
+	nodes: NodeConfig[];
+	services: ServiceConfig[];
 }
 
 export interface NodeMetrics {

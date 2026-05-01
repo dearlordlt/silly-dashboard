@@ -1,4 +1,4 @@
-import { NODES } from '$lib/config/nodes';
+import { getConfig } from '$lib/server/config';
 import { getMetrics } from '$lib/server/metrics-source';
 import type { RequestHandler } from './$types';
 
@@ -24,7 +24,8 @@ export const GET: RequestHandler = () => {
 			const tick = async () => {
 				if (cancelled) return;
 				try {
-					const all = await Promise.all(NODES.map((n) => getMetrics(n)));
+					const { nodes } = getConfig();
+					const all = await Promise.all(nodes.map((n) => getMetrics(n)));
 					send('metrics', all);
 				} catch (err) {
 					send('error', { message: (err as Error).message });
@@ -32,7 +33,7 @@ export const GET: RequestHandler = () => {
 			};
 
 			// initial flush
-			send('hello', { ts: Date.now(), nodes: NODES.map((n) => n.id) });
+			send('hello', { ts: Date.now(), nodes: getConfig().nodes.map((n) => n.id) });
 			await tick();
 
 			const interval = setInterval(tick, TICK_MS);

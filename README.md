@@ -72,7 +72,33 @@ Optional: put behind Caddy for TLS via Tailscale's MagicDNS certs.
 
 ## Configuring your fleet
 
-Edit `src/lib/config/nodes.ts` and `src/lib/config/services.ts`. Both are simple typed arrays — no migrations, no DB, no admin UI for now.
+All runtime config lives in `data/config.json` (gitignored — yours is yours). The committed `data/config.example.json` serves as the schema and the fallback if no personal copy exists.
+
+```jsonc
+{
+  "nodes": [
+    { "id": "macmini", "name": "Mac mini", "role": "server",
+      "host": "100.71.173.104", "tailscaleName": "mac-mini", "hasMetrics": true }
+  ],
+  "services": [
+    { "id": "jellyfin", "name": "Jellyfin", "url": "http://100.71.173.104:8096",
+      "category": "media", "icon": "play", "nodeId": "macmini" }
+  ]
+}
+```
+
+Edit the file → save → reload the page. The server watches `data/` and reloads in place, no rebuild needed. If validation fails, the previous good config keeps serving and a yellow banner shows the error.
+
+### Discovering services on a node
+
+`scripts/discover.sh` enumerates listening TCP ports on the machine it runs on, classifies the well-known ones (Jellyfin, Sonarr, Radarr, Prowlarr, Transmission, qBittorrent, Plex, Immich, Portainer, Glances, …) and emits a JSON fragment ready to merge into `services`:
+
+```bash
+ssh mac-mini 'bash -s' macmini 100.71.173.104 < scripts/discover.sh > /tmp/services.json
+jq '.' /tmp/services.json
+```
+
+Args: `<nodeId> <host>`. Unrecognized ports come back as `port-N` so you can name them yourself.
 
 ## Metrics: mock → real
 

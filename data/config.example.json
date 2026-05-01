@@ -1,0 +1,93 @@
+{
+	"$schema": "./config.schema.json",
+	"nodes": [
+		{
+			"id": "macmini",
+			"name": "Mac mini",
+			"role": "server",
+			"host": "100.71.173.104",
+			"tailscaleName": "mac-mini",
+			"hasMetrics": true
+		},
+		{
+			"id": "pc",
+			"name": "PC (kompas)",
+			"role": "desktop",
+			"host": "100.126.209.94",
+			"tailscaleName": "kompas",
+			"hasMetrics": true
+		},
+		{
+			"id": "vps",
+			"name": "VPS",
+			"role": "vps",
+			"host": "100.69.184.7",
+			"tailscaleName": "srv485126",
+			"hasMetrics": true
+		},
+		{
+			"id": "rpi",
+			"name": "Raspberry Pi (crowpi)",
+			"role": "rpi",
+			"host": "100.65.95.88",
+			"tailscaleName": "crowpi",
+			"hasMetrics": true
+		},
+		{
+			"id": "mobile",
+			"name": "Galaxy S23 Ultra",
+			"role": "mobile",
+			"host": "100.111.47.5",
+			"tailscaleName": "galaxy-s23-ultra",
+			"hasMetrics": false
+		}
+	],
+	"services": [
+		{
+			"id": "jellyfin",
+			"name": "Jellyfin",
+			"url": "http://100.71.173.104:8096",
+			"category": "media",
+			"icon": "play",
+			"nodeId": "macmini",
+			"description": "Media server"
+		},
+		{
+			"id": "prowlarr",
+			"name": "Prowlarr",
+			"url": "http://100.71.173.104:9696",
+			"category": "arr",
+			"icon": "search",
+			"nodeId": "macmini",
+			"description": "Indexer manager"
+		},
+		{
+			"id": "transmission",
+			"name": "Transmission",
+			"url": "http://100.71.173.104:9091/transmission/web/",
+			"healthUrl": "http://100.71.173.104:9091/transmission/web/",
+			"category": "downloads",
+			"icon": "download",
+			"nodeId": "macmini",
+			"description": "Torrent client"
+		},
+		{
+			"id": "vps-https",
+			"name": "VPS (https)",
+			"url": "https://100.69.184.7",
+			"category": "admin",
+			"icon": "globe",
+			"nodeId": "vps",
+			"description": "Basic-auth gated"
+		},
+		{
+			"id": "tailscale",
+			"name": "Tailscale",
+			"url": "https://login.tailscale.com/admin/machines",
+			"category": "admin",
+			"icon": "network",
+			"nodeId": "macmini",
+			"description": "Tailnet admin"
+		}
+	]
+}

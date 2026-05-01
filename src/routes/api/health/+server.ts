@@ -1,4 +1,4 @@
-import { SERVICES } from '$lib/config/services';
+import { getConfig } from '$lib/server/config';
 import type { ServiceHealth } from '$lib/types';
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
@@ -34,8 +34,9 @@ async function probe(url: string): Promise<ServiceHealth> {
 }
 
 export const GET: RequestHandler = async () => {
+	const { services } = getConfig();
 	const results = await Promise.all(
-		SERVICES.map(async (s) => {
+		services.map(async (s) => {
 			const probed = await probe(s.healthUrl ?? s.url);
 			return { ...probed, id: s.id };
 		})
