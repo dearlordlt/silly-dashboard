@@ -1,5 +1,5 @@
 import { getConfig } from '$lib/server/config';
-import { getMetrics } from '$lib/server/metrics-source';
+import { getNodeMetrics } from '$lib/server/metrics-source';
 import type { RequestHandler } from './$types';
 
 const TICK_MS = 2000;
@@ -25,7 +25,7 @@ export const GET: RequestHandler = () => {
 				if (cancelled) return;
 				try {
 					const { nodes } = getConfig();
-					const all = await Promise.all(nodes.map((n) => getMetrics(n)));
+					const all = await Promise.all(nodes.map((n) => getNodeMetrics(n)));
 					send('metrics', all);
 				} catch (err) {
 					send('error', { message: (err as Error).message });

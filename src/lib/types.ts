@@ -20,17 +20,23 @@ export interface AppConfig {
 export interface NodeMetrics {
 	id: string;
 	online: boolean;
-	/** seconds since boot */
+	/** epoch ms — null when currently online */
+	lastSeenAt: number | null;
+	/** seconds since boot — requires a metrics agent on the node */
 	uptime: number | null;
-	cpu: number | null; // 0-100
-	memTotal: number | null; // bytes
-	memUsed: number | null; // bytes
-	diskTotal: number | null; // bytes
-	diskUsed: number | null; // bytes
-	netRx: number | null; // bytes/sec
-	netTx: number | null; // bytes/sec
+	cpu: number | null; // 0-100, requires agent
+	memTotal: number | null; // bytes, requires agent
+	memUsed: number | null; // bytes, requires agent
+	diskTotal: number | null; // bytes, requires agent
+	diskUsed: number | null; // bytes, requires agent
+	netRx: number | null; // bytes/sec, requires agent
+	netTx: number | null; // bytes/sec, requires agent
 	loadAvg: [number, number, number] | null;
 	tempC: number | null;
+	/** session-cumulative bytes from Tailscale (real) */
+	txBytesTotal: number | null;
+	rxBytesTotal: number | null;
+	os: string | null;
 	updatedAt: number; // epoch ms
 }
 

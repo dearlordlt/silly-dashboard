@@ -1,14 +1,7 @@
 <script lang="ts">
 	import type { NodeConfig } from '$lib/types';
 	import { metricsStore } from '$lib/stores/metrics.svelte';
-	import {
-		formatBytes,
-		formatPercent,
-		formatRate,
-		formatUptime,
-		utilColor,
-		cn
-	} from '$lib/utils';
+	import { formatBytes, formatPercent, formatUptime, utilColor, cn } from '$lib/utils';
 	import Bar from './Bar.svelte';
 	import StatusDot from './StatusDot.svelte';
 	import {
@@ -36,6 +29,21 @@
 	let diskPct = $derived(
 		m?.diskTotal && m?.diskUsed != null ? (m.diskUsed / m.diskTotal) * 100 : null
 	);
+	let hasAgent = $derived(m?.cpu != null);
+
+	// human last-seen
+	let lastSeenLabel = $derived.by(() => {
+		if (!m?.lastSeenAt) return null;
+		const ms = Date.now() - m.lastSeenAt;
+		const sec = Math.floor(ms / 1000);
+		if (sec < 60) return `${sec}s ago`;
+		const min = Math.floor(sec / 60);
+		if (min < 60) return `${min}m ago`;
+		const hr = Math.floor(min / 60);
+		if (hr < 48) return `${hr}h ago`;
+		const days = Math.floor(hr / 24);
+		return `${days}d ago`;
+	});
 
 	const Icon = $derived(
 		{ server: Server, desktop: Monitor, vps: Cloud, rpi: Cpu, mobile: Smartphone }[node.role]
@@ -45,7 +53,8 @@
 <div
 	class={cn(
 		'group relative flex flex-col gap-3 rounded-xl border border-neutral-800 bg-neutral-900/60 p-4 backdrop-blur-sm transition-colors',
-		'hover:border-neutral-700'
+		'hover:border-neutral-700',
+		!online && 'opacity-70'
 	)}
 >
 	<!-- header -->
@@ -56,7 +65,9 @@
 			</div>
 			<div>
 				<div class="text-sm font-medium">{node.name}</div>
-				<div class="font-mono text-xs text-neutral-500">{node.host}</div>
+				<div class="font-mono text-xs text-neutral-500">
+					{node.tailscaleName ?? node.host}
+				</div>
 			</div>
 		</div>
 		<div class="flex items-center gap-2 text-xs text-neutral-500">
@@ -65,13 +76,38 @@
 		</div>
 	</div>
 
-	{#if !node.hasMetrics}
-		<div class="flex items-center justify-between text-xs text-neutral-500">
-			<span>presence-only</span>
-			<span>via Tailscale</span>
+	{#if !m}
+		<div class="grid place-items-center py-4 text-xs text-neutral-600">connecting…</div>
+	{:else if !online}
+		<div class="space-y-1 text-xs text-neutral-500">
+			<div>not currently on the tailnet</div>
+			{#if lastSeenLabel}
+				<div class="text-neutral-600">last seen {lastSeenLabel}</div>
+			{/if}
 		</div>
-	{:else if m}
-		<!-- CPU -->
+	{:else if !hasAgent}
+		<!-- Online, but no per-node metrics agent yet -->
+		<div class="space-y-1.5 text-xs text-neutral-500">
+			<div>online via Tailscale</div>
+			<div class="text-neutral-600">
+				no metrics agent — install Glances on this node for CPU/RAM/disk
+			</div>
+			{#if m.txBytesTotal != null || m.rxBytesTotal != null}
+				<div class="tabular flex items-center gap-3 pt-1 text-neutral-600">
+					<span class="flex items-center gap-1">
+						<ArrowDown size={11} class="text-emerald-500" />
+						{formatBytes(m.rxBytesTotal ?? 0)}
+					</span>
+					<span class="flex items-center gap-1">
+						<ArrowUp size={11} class="text-sky-500" />
+						{formatBytes(m.txBytesTotal ?? 0)}
+					</span>
+					<span class="text-neutral-700">tailscale total</span>
+				</div>
+			{/if}
+		</div>
+	{:else}
+		<!-- Real agent metrics -->
 		<div class="space-y-1.5">
 			<div class="flex items-baseline justify-between text-xs">
 				<span class="text-neutral-400">CPU</span>
@@ -82,7 +118,6 @@
 			<Bar value={m.cpu} />
 		</div>
 
-		<!-- Memory -->
 		<div class="space-y-1.5">
 			<div class="flex items-baseline justify-between text-xs">
 				<span class="text-neutral-400">Memory</span>
@@ -94,7 +129,6 @@
 			<Bar value={memPct} />
 		</div>
 
-		<!-- Disk -->
 		<div class="space-y-1.5">
 			<div class="flex items-baseline justify-between text-xs">
 				<span class="text-neutral-400">Disk</span>
@@ -108,17 +142,8 @@
 			<Bar value={diskPct} />
 		</div>
 
-		<!-- Net + uptime row -->
 		<div class="flex items-center justify-between border-t border-neutral-800 pt-2 text-xs">
 			<div class="flex items-center gap-3 text-neutral-400">
-				<span class="tabular flex items-center gap-1">
-					<ArrowDown size={12} class="text-emerald-400" />
-					{formatRate(m.netRx)}
-				</span>
-				<span class="tabular flex items-center gap-1">
-					<ArrowUp size={12} class="text-sky-400" />
-					{formatRate(m.netTx)}
-				</span>
 				{#if m.tempC != null}
 					<span class="tabular flex items-center gap-1 text-neutral-500">
 						<Thermometer size={12} />
@@ -128,7 +153,5 @@
 			</div>
 			<span class="tabular text-neutral-500">up {formatUptime(m.uptime)}</span>
 		</div>
-	{:else}
-		<div class="grid place-items-center py-6 text-xs text-neutral-600">connecting…</div>
 	{/if}
 </div>
